@@ -1,0 +1,16 @@
+apiVersion: v2
+name: netai-chatbot
+description: NETAI — AI-Powered Kubernetes Chatbot for Network Diagnostics on NRP
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - netai
+  - chatbot
+  - llm
+  - kubernetes
+  - network-diagnostics
+  - perfsonar
+  - gsoc
+maintainers:
+  - name: Mohammed Anirudh

@@ -1,0 +1,8 @@
+# NETAI Chatbot — Kubernetes Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: netai
+  labels:
+    app.kubernetes.io/name: netai
+    app.kubernetes.io/part-of: netai-platform

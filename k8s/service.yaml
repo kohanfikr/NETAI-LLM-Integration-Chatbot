@@ -1,0 +1,17 @@
+# NETAI Chatbot — Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: netai-chatbot
+  namespace: netai
+  labels:
+    app.kubernetes.io/name: netai-chatbot
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: netai-chatbot

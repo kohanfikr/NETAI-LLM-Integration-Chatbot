@@ -1,0 +1,24 @@
+services:
+  chatbot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: netai-chatbot
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_DEBUG=true
+      - APP_LOG_LEVEL=debug
+      - ENABLE_MOCK_DATA=true
+      - LLM_API_KEY=mock-key-for-development
+      - LLM_DEFAULT_MODEL=qwen3-vl
+    volumes:
+      - ./src:/app/src:ro
+      - ./static:/app/static:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8000/healthz').raise_for_status()"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

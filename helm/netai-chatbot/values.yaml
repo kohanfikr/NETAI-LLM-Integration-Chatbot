@@ -1,0 +1,99 @@
+# Default values for netai-chatbot Helm chart
+
+replicaCount: 2
+
+image:
+  repository: ghcr.io/mohammed-anirudh/netai-chatbot
+  pullPolicy: Always
+  tag: "latest"
+
+serviceAccount:
+  create: true
+  name: ""
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8000
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+  hosts:
+    - host: netai-chatbot.nrp-nautilus.io
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: netai-chatbot-tls
+      hosts:
+        - netai-chatbot.nrp-nautilus.io
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: "1"
+    memory: 1Gi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+# Application configuration
+config:
+  appHost: "0.0.0.0"
+  appPort: "8000"
+  appLogLevel: "info"
+  appDebug: "false"
+  llmApiBaseUrl: "https://llm.nrp-nautilus.io/v1"
+  llmDefaultModel: "qwen3-vl"
+  llmTemperature: "0.7"
+  llmMaxTokens: "2048"
+  enableMockData: "false"
+  perfsonarUrl: "http://perfsonar.nrp-nautilus.io"
+  maxConversationHistory: "50"
+  contextWindowSize: "10"
+
+# Secrets (use external secrets in production)
+secrets:
+  llmApiKey: ""
+  perfsonarApiKey: ""
+
+# GPU inference sidecar (optional)
+gpuInference:
+  enabled: false
+  image:
+    repository: ghcr.io/mohammed-anirudh/netai-inference
+    tag: "latest"
+  resources:
+    requests:
+      cpu: "2"
+      memory: 8Gi
+      nvidia.com/gpu: "1"
+    limits:
+      cpu: "4"
+      memory: 16Gi
+      nvidia.com/gpu: "1"
+
+# Pod security
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+securityContext:
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

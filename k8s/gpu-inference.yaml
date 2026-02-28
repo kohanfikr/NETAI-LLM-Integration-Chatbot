@@ -1,0 +1,94 @@
+# NETAI — GPU-Enabled LLM Inference Pod
+# For running local LLM inference on NRP GPU resources
+# This is used when self-hosting models instead of using NRP's managed LLM service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netai-llm-inference
+  namespace: netai
+  labels:
+    app.kubernetes.io/name: netai-llm-inference
+    app.kubernetes.io/component: inference
+    app.kubernetes.io/part-of: netai-platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: netai-llm-inference
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: netai-llm-inference
+        app.kubernetes.io/component: inference
+    spec:
+      containers:
+        - name: inference
+          image: ghcr.io/mohammed-anirudh/netai-inference:latest
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: MODEL_NAME
+              value: "qwen3-vl"
+            - name: GPU_MEMORY_FRACTION
+              value: "0.9"
+            - name: MAX_BATCH_SIZE
+              value: "8"
+          resources:
+            requests:
+              cpu: "2"
+              memory: 8Gi
+              nvidia.com/gpu: "1"
+            limits:
+              cpu: "4"
+              memory: 16Gi
+              nvidia.com/gpu: "1"
+          volumeMounts:
+            - name: model-cache
+              mountPath: /models
+            - name: shm
+              mountPath: /dev/shm
+      volumes:
+        - name: model-cache
+          persistentVolumeClaim:
+            claimName: netai-model-cache
+        - name: shm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 2Gi
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
+      nodeSelector:
+        nvidia.com/gpu.present: "true"
+---
+# PVC for model cache
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: netai-model-cache
+  namespace: netai
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Gi
+  storageClassName: rook-ceph-block
+---
+# Service for inference
+apiVersion: v1
+kind: Service
+metadata:
+  name: netai-llm-inference
+  namespace: netai
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+  selector:
+    app.kubernetes.io/name: netai-llm-inference

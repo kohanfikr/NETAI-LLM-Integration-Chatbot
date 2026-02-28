@@ -1,0 +1,21 @@
+# NETAI Chatbot — ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: netai-chatbot-config
+  namespace: netai
+  labels:
+    app.kubernetes.io/name: netai-chatbot
+data:
+  APP_HOST: "0.0.0.0"
+  APP_PORT: "8000"
+  APP_LOG_LEVEL: "info"
+  APP_DEBUG: "false"
+  LLM_API_BASE_URL: "https://llm.nrp-nautilus.io/v1"
+  LLM_DEFAULT_MODEL: "qwen3-vl"
+  LLM_TEMPERATURE: "0.7"
+  LLM_MAX_TOKENS: "2048"
+  ENABLE_MOCK_DATA: "false"
+  PERFSONAR_URL: "http://perfsonar.nrp-nautilus.io"
+  MAX_CONVERSATION_HISTORY: "50"
+  CONTEXT_WINDOW_SIZE: "10"

@@ -1,0 +1,77 @@
+# NETAI Chatbot — Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netai-chatbot
+  namespace: netai
+  labels:
+    app.kubernetes.io/name: netai-chatbot
+    app.kubernetes.io/component: chatbot
+    app.kubernetes.io/part-of: netai-platform
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: netai-chatbot
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: netai-chatbot
+        app.kubernetes.io/component: chatbot
+    spec:
+      serviceAccountName: netai-chatbot
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+        - name: chatbot
+          image: ghcr.io/mohammed-anirudh/netai-chatbot:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: netai-chatbot-config
+            - secretRef:
+                name: netai-chatbot-secrets
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+# ServiceAccount
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: netai-chatbot
+  namespace: netai
+  labels:
+    app.kubernetes.io/name: netai-chatbot
